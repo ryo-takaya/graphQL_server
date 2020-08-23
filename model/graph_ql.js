@@ -21,9 +21,6 @@ const typeDefs = gql`
   }
 `;
 
-// id: Int
-
-// Provide resolver functions for your schema fields
 const resolvers = {
   Query: {
     taskItems: async () => {
@@ -65,12 +62,12 @@ const resolvers = {
       const result = await db("task_items")
         .where({ id: arg.id })
         .delete()
-        .then((res) => db.select().from("task_items"));
+        .then((res) => db("task_items").orderBy("id"));
       return result;
     },
     deleteCheckedTaskItem: async (parent, arg) => {
       await db("task_items").where({ checked: true }).del();
-      const result = db.select("*").from("task_items");
+      const result = db("task_items").orderBy("id");
       console.log(result);
       return result;
     },
