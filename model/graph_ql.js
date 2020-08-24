@@ -13,10 +13,10 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createTaskItem(text: String!): [Task]
-    changeCheckedFlag(id: Int, checked: Boolean): [Task]
-    changeText(id: Int, text: String): [Task]
-    deleteTaskItem(id: Int): [Task]
+    createTaskItem(text: String!): Task
+    changeCheckedFlag(id: Int, checked: Boolean): Task
+    changeText(id: Int, text: String): Task
+    deleteTaskItem(id: Int): Task
     deleteCheckedTaskItem: [Task]
   }
 `;
@@ -33,37 +33,37 @@ const resolvers = {
       const result = await db("task_items")
         .insert({ text: arg.text, checked: false })
         .then((res) => {
-          return db("task_items").orderBy("id");
+          return db("task_items").orderBy("id", "desc").limit(1);
         });
-
-      return result;
+      return result[0];
     },
     changeCheckedFlag: async (parent, arg) => {
-      const nextChecked = arg.checked === false ? true : false;
+      const nextChecked = !arg.checked;
       const result = await db("task_items")
         .where({ id: arg.id })
         .update({ checked: nextChecked })
         .then((res) => {
-          return db("task_items").orderBy("id");
+          return db("task_items").where({ id: arg.id });
         });
-      return result;
+      return result[0];
     },
     changeText: async (parent, arg) => {
       const result = await db("task_items")
         .where({ id: arg.id })
         .update({ text: arg.text })
         .then((res) => {
-          return db("task_items").orderBy("id");
+          return db("task_items").where({ id: arg.id });
         });
 
-      return result;
+      return result[0];
     },
     deleteTaskItem: async (parent, arg) => {
-      const result = await db("task_items")
+      const deleteId = await db("task_items")
         .where({ id: arg.id })
         .delete()
-        .then((res) => db("task_items").orderBy("id"));
-      return result;
+        .then(() => arg.id);
+
+      return { id: arg.id };
     },
     deleteCheckedTaskItem: async (parent, arg) => {
       await db("task_items").where({ checked: true }).del();

@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const path = require("path");
+
 const apploServer = require("./model/graph_ql");
 app.use(cors());
 
